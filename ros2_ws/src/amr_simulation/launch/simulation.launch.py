@@ -22,17 +22,35 @@ def generate_launch_description() -> LaunchDescription:
         get_package_share_directory("ros_gz_sim")
     )
 
-    xacro_file = description_share / "urdf" / "robot.urdf.xacro"
-    world_file = simulation_share / "worlds" / "empty.world.sdf"
+    xacro_file = (
+        description_share
+        / "urdf"
+        / "robot.urdf.xacro"
+    )
+
+    world_file = (
+        simulation_share
+        / "worlds"
+        / "empty.world.sdf"
+    )
 
     robot_description = ParameterValue(
-        Command(["xacro ", str(xacro_file)]),
+        Command(
+            [
+                "xacro ",
+                str(xacro_file),
+            ]
+        ),
         value_type=str,
     )
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            str(ros_gz_share / "launch" / "gz_sim.launch.py")
+            str(
+                ros_gz_share
+                / "launch"
+                / "gz_sim.launch.py"
+            )
         ),
         launch_arguments={
             "gz_args": f"-r {world_file}"
@@ -55,6 +73,8 @@ def generate_launch_description() -> LaunchDescription:
     spawn_robot = Node(
         package="ros_gz_sim",
         executable="create",
+        name="spawn_amr",
+        output="screen",
         arguments=[
             "-topic",
             "robot_description",
@@ -67,7 +87,20 @@ def generate_launch_description() -> LaunchDescription:
             "-z",
             "0.10",
         ],
+    )
+
+    bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="ros_gz_bridge",
         output="screen",
+        arguments=[
+            "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
+            "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
+            "/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model",
+            "/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V",
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+        ],
     )
 
     return LaunchDescription(
@@ -75,5 +108,6 @@ def generate_launch_description() -> LaunchDescription:
             gazebo,
             robot_state_publisher,
             spawn_robot,
+            bridge,
         ]
     )
