@@ -103,11 +103,27 @@ def generate_launch_description() -> LaunchDescription:
         ],
     )
 
+    lidar_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="lidar_bridge",
+        output="screen",
+        arguments=[
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+        ],
+        parameters=[
+            {
+                "override_frame_id": "lidar_link",
+            }
+        ],
+    )
+
     return LaunchDescription(
         [
             gazebo,
             robot_state_publisher,
             spawn_robot,
             bridge,
+            lidar_bridge,
         ]
     )
