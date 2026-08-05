@@ -1,87 +1,325 @@
-# Autnomous Mobile Robot
+# Autonomous Mobile Robot (AMR)
 
-A complete end-to-end autonomous mobile robotics platform built to showcase modern robotics software engineering, embedded systems, computer vision, and AI.
+<p align="center">
 
-This project combines **ROS 2**, **embedded C++**, **computer vision**, **autonomous navigation**, and **MLOps/DevOps** into a single modular platform capable of operating both in simulation and on a real robot.
+Autonomous Mobile Robot platform built with **ROS 2 Jazzy**, **Gazebo Harmonic**, **ros2_control**, **Navigation2**, **SLAM Toolbox**, **Computer Vision**, and **Embedded C++**.
 
-## Features
+Designed to bridge robotics, AI, embedded systems, and modern software engineering through a modular architecture that runs both in simulation and on a real robot.
 
-* Autonomous navigation using **Nav2**
-* 2D mapping and localization with **SLAM Toolbox**
-* Embedded motor control (STM32/ESP32, C++)
-* Differential drive kinematics
-* LiDAR and camera integration
-* Object detection using **YOLO**
-* Person detection and obstacle avoidance
-* Sensor fusion (encoders, IMU, LiDAR)
-* FastAPI backend for robot control
-* Real-time web dashboard
-* Dockerized deployment
-* Continuous Integration with GitHub Actions
-* Comprehensive documentation and testing
+</p>
 
-## Technologies
+---
 
-### Robotics
+## Overview
 
-* ROS 2
-* Nav2
-* SLAM Toolbox
-* robot_localization
-* RViz2
-* Gazebo / Ignition
-* TF2
-* URDF / Xacro
+This repository contains the complete software stack of an autonomous differential-drive mobile robot.
 
-### Embedded Systems
+The objective is to build an industrial-grade robotics platform capable of:
 
-* Modern C++
-* STM32 / ESP32
-* PlatformIO
-* UART
-* PWM
-* PID controllers
-* FreeRTOS (optional)
+- autonomous navigation
+- simultaneous localization and mapping (SLAM)
+- localization on pre-built maps
+- obstacle avoidance
+- embedded motor control
+- computer vision
+- object and human detection
+- web-based monitoring
+- API-based mission control
 
-### Artificial Intelligence
+The project is developed incrementally:
 
-* PyTorch
-* OpenCV
-* YOLO
-* ONNX Runtime / TensorRT
-* ByteTrack / DeepSORT
+```
+Simulation
+        ↓
+Embedded firmware
+        ↓
+Localization
+        ↓
+Navigation
+        ↓
+Computer Vision
+        ↓
+Artificial Intelligence
+        ↓
+Real Robot
+```
 
-### Backend
+---
 
-* FastAPI
-* WebSockets
-* PostgreSQL
+# Main Features
 
-### Frontend
+Current features include:
 
-* React / Next.js
+- Differential-drive robot model
+- URDF/Xacro robot description
+- Gazebo Harmonic simulation
+- ros2_control integration
+- LiDAR simulation
+- SLAM Toolbox
+- Map saving
+- AMCL localization
+- Navigation2
+- Joystick teleoperation
+- Keyboard teleoperation
+- Modular ROS2 architecture
 
-### DevOps
+Planned features:
 
-* Docker
-* Docker Compose
-* GitHub Actions
-* Prometheus
-* Grafana
+- Wheel encoders
+- IMU sensor fusion
+- Extended Kalman Filter
+- RGB camera
+- YOLO object detection
+- Person tracking
+- Safety supervisor
+- FastAPI backend
+- React dashboard
+- Docker deployment
+- Continuous Integration
 
-## Project Goals
+---
 
-The objective of this project is not only to build an autonomous robot, but also to demonstrate software engineering best practices by combining:
+# Software Architecture
 
-* Robotics
-* Artificial Intelligence
-* Embedded programming
-* Software architecture
-* DevOps
-* MLOps
-* Testing
-* Documentation
+```
+                        Web Dashboard
+                              │
+                              ▼
+                         FastAPI Backend
+                              │
+                              ▼
+                        ROS 2 Bringup
+                              │
+      ┌───────────────┬───────────────┬──────────────┐
+      │               │               │              │
+      ▼               ▼               ▼              ▼
+Localization      Navigation      Perception      Control
+      │               │               │              │
+      └───────────────┴───────────────┴──────────────┘
+                              │
+                       ros2_control
+                              │
+                      Differential Drive
+                              │
+                      Gazebo / Real Robot
+```
 
-The entire system is designed with a modular architecture, allowing every component to be developed, tested, and deployed independently.
+---
 
-This repository serves both as a personal learning project and as a production-inspired robotics platform showcasing modern autonomous robotics development.
+# Repository Structure
+
+```
+Autonomous-Mobile-Robot/
+
+backend/
+docker/
+docs/
+firmware/
+frontend/
+hardware/
+scripts/
+tests/
+
+ros2_ws/
+└── src/
+    ├── amr_bringup
+    ├── amr_description
+    ├── amr_simulation
+    ├── amr_slam
+    ├── amr_localization
+    ├── amr_navigation
+    ├── amr_joystick_bridge
+    └── ...
+```
+
+---
+
+# Technologies
+
+## Robotics
+
+- ROS 2 Jazzy
+- Gazebo Harmonic
+- ros2_control
+- Navigation2
+- SLAM Toolbox
+- robot_localization
+- RViz2
+- TF2
+- URDF
+- Xacro
+
+## Embedded
+
+- C++
+- ESP32
+- STM32
+- PlatformIO
+- FreeRTOS
+
+## Artificial Intelligence
+
+- PyTorch
+- OpenCV
+- YOLO
+- ONNX Runtime
+
+## Backend
+
+- FastAPI
+- WebSockets
+
+## Frontend
+
+- React
+- Next.js
+
+## DevOps
+
+- Docker
+- Docker Compose
+- GitHub Actions
+
+---
+
+# Quick Start
+
+Clone the repository
+
+```bash
+git clone git@github.com:Salim-MSI/Autonomous-Mobile-Robot.git
+cd Autonomous-Mobile-Robot/ros2_ws
+```
+
+Install dependencies
+
+```bash
+rosdep install \
+  --from-paths src \
+  --ignore-src \
+  --rosdistro jazzy \
+  -r -y
+```
+
+Build
+
+```bash
+colcon build --symlink-install
+```
+
+Source the workspace
+
+```bash
+source install/setup.bash
+```
+
+Launch the simulation
+
+```bash
+ros2 launch amr_bringup simulation.launch.py
+```
+
+---
+
+# Documentation
+
+| Guide | Description |
+|--------|-------------|
+| INSTALLATION.md | Complete installation procedure |
+| SIMULATION.md | Gazebo simulation |
+| SLAM.md | Mapping using SLAM Toolbox |
+| LOCALIZATION.md | AMCL localization |
+| NAV2.md | Autonomous navigation |
+| JOYSTICK.md | Windows joystick bridge |
+| TROUBLESHOOTING.md | Common issues |
+| ARCHITECTURE.md | Software architecture |
+| SPECIFICATIONS.md | System specifications |
+
+---
+
+# Development Status
+
+| Module | Status |
+|---------|--------|
+| Repository | ✅ |
+| Documentation | ✅ |
+| URDF | ✅ |
+| Gazebo | ✅ |
+| ros2_control | ✅ |
+| LiDAR | ✅ |
+| SLAM | ✅ |
+| Localization | ✅ |
+| Navigation | ✅ |
+| Camera | 🟡 |
+| Perception | ⬜ |
+| YOLO | ⬜ |
+| Firmware | ⬜ |
+| EKF | ⬜ |
+| Backend | ⬜ |
+| Dashboard | ⬜ |
+| Docker | ⬜ |
+| Hardware | ⬜ |
+
+---
+
+# Roadmap
+
+Phase 1
+- Simulation
+- Robot description
+- ros2_control
+- LiDAR
+- SLAM
+
+Phase 2
+- Localization
+- Navigation
+- Sensor Fusion
+- Embedded firmware
+
+Phase 3
+- Computer Vision
+- Object Detection
+- Human Tracking
+
+Phase 4
+- REST API
+- Web Dashboard
+- Docker Deployment
+
+Phase 5
+- Physical Robot
+- Field Testing
+
+---
+
+# Project Goals
+
+This project aims to demonstrate modern robotics software engineering by combining:
+
+- Autonomous Robotics
+- Artificial Intelligence
+- Embedded Systems
+- Computer Vision
+- Software Architecture
+- MLOps
+- DevOps
+- Continuous Integration
+- Testing
+- Documentation
+
+The software is designed to remain modular, reusable, and maintainable throughout the transition from simulation to the physical robot.
+
+---
+
+# License
+
+This project is distributed under the Apache 2.0 License.
+
+---
+
+# Author
+
+**Salim Mansouri**
+
+Robotics • Artificial Intelligence • Embedded Systems • Computer Vision

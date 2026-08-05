@@ -1,222 +1,419 @@
-# Joystick Control Guide
+# Joystick Guide
 
-## 1. Architecture
+This guide explains how to remotely control the robot using a gamepad connected to a Windows computer.
 
-The current development setup uses:
-
-- the game controller connected to Windows;
-- `amr_joystick_sender` executed from Windows PowerShell;
-- the ROS 2 receiver/bridge executed inside WSL;
-- UDP communication between Windows and the WSL network interface.
-
-The IP address required by the Windows sender is the WSL IP address, not necessarily the normal Windows Wi-Fi or Ethernet address shown by `ipconfig`.
+Unlike a standard ROS 2 joystick setup, this project uses a lightweight UDP bridge between Windows and the ROS 2 workspace running under WSL2.
 
 ---
 
-## 2. Important WSL IP Detail
+# Table of Contents
 
-Open a WSL Bash terminal and run:
+- Overview
+- Architecture
+- Communication Pipeline
+- Requirements
+- Windows Setup
+- WSL Setup
+- Launch the Joystick
+- Validation
+- Useful Commands
+- Troubleshooting
+
+---
+
+# Overview
+
+The joystick system allows the robot to be driven from Windows while the ROS 2 stack runs inside WSL2.
+
+The communication is performed over UDP.
+
+Advantages:
+
+- No ROS installation on Windows.
+- Low latency.
+- Lightweight protocol.
+- Compatible with any Windows gamepad.
+- Works over Wi-Fi or Ethernet.
+
+---
+
+# Architecture
+
+```
+Xbox Controller
+       │
+       ▼
+Windows Application
+(amr_joystick_sender)
+       │
+       ▼
+UDP
+       │
+       ▼
+WSL2
+       │
+       ▼
+udp_joystick_node
+       │
+       ▼
+/diff_drive_controller/cmd_vel
+       │
+       ▼
+diff_drive_controller
+       │
+       ▼
+Robot
+```
+
+---
+
+# Communication Pipeline
+
+```
+Gamepad
+
+↓
+
+Windows Sender
+
+↓
+
+UDP
+
+↓
+
+WSL Network
+
+↓
+
+UDP Bridge
+
+↓
+
+ROS 2
+
+↓
+
+diff_drive_controller
+
+↓
+
+Robot
+```
+
+---
+
+# Requirements
+
+Before using the joystick:
+
+- Windows application compiled.
+- ROS workspace built.
+- Simulation running.
+- UDP port available.
+- WSL networking operational.
+
+---
+# Operating Procedure
+
+1. Launch the Windows joystick sender.
+2. Enter the current WSL IP address.
+3. Connect to the robot.
+4. **Press and hold the Enable button.**
+5. Move the joysticks to drive the robot.
+6. Release the Enable button to stop immediately.
+
+# Windows Setup
+
+Launch the Windows joystick sender.
+
+The application sends velocity commands to the WSL IP address using UDP.
+
+Retrieve the WSL IP:
 
 ```bash
 hostname -I
 ```
 
-Example output:
+Typical output:
 
-```text
-172.25.64.1 172.18.0.1
+```
+172.xx.xx.xx
 ```
 
-Use the address associated with the active WSL interface. In most configurations, this is the first address returned.
+Use the first address in the Windows application.
 
-To print only the first address:
+> **Important**
+>
+> The WSL IP address changes after restarting Windows or WSL.
+> Always verify the address before launching the sender.
+
+---
+
+# WSL Setup
+
+Build the workspace:
 
 ```bash
-hostname -I | awk '{print $1}'
+colcon build --symlink-install
 ```
+
+Source the workspace:
+
+```bash
+source install/setup.bash
+```
+
+---
+
+# Launch the Joystick
+
+Start the bridge:
+
+```bash
+ros2 launch amr_bringup joystick.launch.py use_udp_bridge:=True
+```
+
+---
+
+# Validation
+
+Verify the bridge is running:
+
+```bash
+ros2 node list
+```
+
+Expected:
+
+```
+/udp_joystick_node
+```
+
+---
+
+Verify velocity commands:
+
+```bash
+ros2 topic echo /diff_drive_controller/cmd_vel
+```
+
+Moving the joystick should publish velocity commands.
+
+---
+
+Verify robot motion
+
+The robot should respond smoothly to joystick inputs.
+
+If communication stops, the robot automatically receives a zero velocity command after the configured timeout.
+
+---
+
+# Enable Button
+
+The Windows application includes an **Enable** button acting as a dead-man switch.
+
+> **Important**
+>
+> The **Enable** button must remain pressed while driving the robot.
+>
+> When the button is released, the application immediately sends zero velocity commands, causing the robot to stop safely.
+
+This safety mechanism prevents unintended robot motion if the operator releases the controls.
+
+---
+
+# Parameters
+
+The bridge exposes several configurable parameters.
+
+| Parameter | Description |
+|-----------|-------------|
+| `port` | UDP listening port |
+| `cmd_vel_topic` | Velocity command topic |
+| `command_timeout` | Automatic stop timeout |
+| `max_linear_speed` | Maximum linear speed |
+| `max_angular_speed` | Maximum angular speed |
 
 Example:
 
-```text
-172.25.64.1
-```
-
-The WSL IP address can change when WSL or Windows restarts. Retrieve it again whenever the joystick sender can no longer reach the ROS 2 bridge.
-
-Do not blindly use the address returned by Windows `ipconfig`: the sender must target the WSL address on which the bridge is listening.
-
----
-
-## 3. Recommended Startup Order
-
-Use the following order every time.
-
-### Terminal 1 — Start the robot or simulation in WSL
-
 ```bash
-cd ~/AMR-Project/Autonomous-Mobile-Robot/ros2_ws
-
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-# Launch the required robot or simulation bringup file.
-```
-
-### Terminal 2 — Retrieve the WSL address
-
-```bash
-hostname -I | awk '{print $1}'
-```
-
-Keep this address available for the PowerShell sender.
-
-### Terminal 3 — Start the joystick receiver in WSL
-
-```bash
-cd ~/AMR-Project/Autonomous-Mobile-Robot/ros2_ws
-
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-# Launch the amr_joystick_bridge receiver using the command
-# defined by the package or project launch file.
-```
-
-The receiver must be running before testing controller commands.
-
-### Windows PowerShell — Run the sender
-
-Open PowerShell in the directory containing the Windows sender script and execute (powershell):
-
-```powershell
-python amr_joystick_sender.py
-```
-
-Configure or provide the WSL IP address obtained from (bash):
-
-```bash
-hostname -I | awk '{print $1}'
-```
-
-Use the argument or configuration method implemented by the script. For example, if the sender exposes a host option (powershell):
-
-```powershell
-python aamr_joystick_sender.py --host <WSL_IP>
-```
-
-Replace `<WSL_IP>` with the address returned by WSL. Do not add an option that the script does not implement; check its help output first:
-
-```powershell
-python amr_joystick_sender.py --help
+ros2 param list /udp_joystick_node
 ```
 
 ---
 
-## 4. PowerShell Script Policy
+# Useful Commands
 
-The Windows-side entry point for controller transmission is:
-
-```text
-amr_joystick_sender
-```
-
-Do not attempt to launch the ROS 2 Linux receiver directly from PowerShell. PowerShell reads the Windows controller and sends its state to the bridge running in WSL.
-
-The exact invocation depends on how the script is stored:
-
-```powershell
-python amr_joystick_sender.py
-```
-
-The repository should eventually provide a dedicated Windows README or a wrapper script so the command remains stable.
-
----
-
-## 5. Verify ROS 2 Output
-
-In WSL, check whether velocity commands are published:
+List nodes
 
 ```bash
-ros2 topic list | grep cmd_vel
-```
-
-Inspect commands:
-
-```bash
-ros2 topic echo /cmd_vel
-```
-
-Depending on the configured controller stack, the output topic may instead be namespaced or use `geometry_msgs/msg/TwistStamped`.
-
-Check its type:
-
-```bash
-ros2 topic type /cmd_vel
-```
-
-Check its publication rate:
-
-```bash
-ros2 topic hz /cmd_vel
-```
-
----
-
-## 6. Safety
-
-Before enabling joystick motion:
-
-- lift the drive wheels or place the robot in a clear area;
-- verify that the emergency-stop mechanism is accessible;
-- begin with reduced velocity and acceleration limits;
-- confirm the dead-man switch behavior;
-- ensure the robot stops when communication is interrupted.
-
-The receiver should implement a timeout that publishes a zero command when packets stop arriving.
-
----
-
-## 7. Troubleshooting
-
-### No commands are received
-
-1. Retrieve the current WSL IP again:
-
-```bash
-hostname -I | awk '{print $1}'
-```
-
-2. Confirm that the PowerShell sender targets that address.
-3. Confirm that the receiver is running.
-4. Confirm that both sender and receiver use the same UDP port.
-5. Check Windows Defender Firewall.
-6. Restart WSL if the virtual network is in an inconsistent state:
-
-```powershell
-wsl --shutdown
-```
-
-Then reopen WSL, retrieve the new IP, restart the ROS 2 bridge, and relaunch `amr_joystick_sender`.
-
-### Controller is not detected in Windows
-
-Verify that Windows recognizes the controller:
-
-```powershell
-joy.cpl
-```
-
-This opens the Windows game-controller panel.
-
-### `/cmd_vel` exists but the robot does not move
-
-Check:
-
-```bash
-ros2 topic echo /cmd_vel
-ros2 topic info /cmd_vel -v
 ros2 node list
-ros2 topic echo /odom
 ```
 
-Also verify that the simulation or motor controller subscribes to the same command topic.
+Topics
+
+```bash
+ros2 topic list
+```
+
+Monitor velocity commands
+
+```bash
+ros2 topic echo /diff_drive_controller/cmd_vel
+```
+
+Check topic frequency
+
+```bash
+ros2 topic hz /diff_drive_controller/cmd_vel
+```
+
+View bridge parameters
+
+```bash
+ros2 param list /udp_joystick_node
+```
+
+---
+
+# Safety Features
+
+The joystick bridge includes several safety mechanisms.
+
+## Dead-Man Switch
+
+The Windows application implements a **dead-man switch** using the **Enable** button.
+
+The operator must keep the button pressed while driving the robot.
+
+When the button is released:
+
+- the sender immediately transmits zero velocity commands;
+- the robot stops;
+- navigation commands are cancelled.
+
+This prevents unintended robot motion.
+
+---
+
+## Communication Timeout
+
+If the UDP bridge stops receiving packets for longer than the configured timeout, it automatically publishes a zero velocity command.
+
+This protects against:
+
+- Windows application crashes;
+- Wi-Fi interruptions;
+- Ethernet disconnections;
+- unexpected communication loss.
+
+---
+
+# Troubleshooting
+
+## Robot does not move
+
+Verify that the bridge is running:
+
+```bash
+ros2 node list
+```
+
+Expected:
+
+```
+/udp_joystick_node
+```
+
+---
+
+## No commands received
+
+Verify:
+
+```bash
+ros2 topic echo /diff_drive_controller/cmd_vel
+```
+
+If no messages are received:
+
+- Check the Windows sender.
+- Verify the UDP port.
+- Verify the WSL IP address.
+
+---
+
+## Wrong WSL IP
+
+Retrieve the current address:
+
+```bash
+hostname -I
+```
+
+Update the Windows application accordingly.
+
+---
+
+## Port already in use
+
+Verify:
+
+```bash
+ss -lun | grep 5005
+```
+
+If another process is using the port, stop it or choose another port.
+
+---
+
+## Robot continues moving
+
+Normally the bridge publishes a zero velocity command after the timeout.
+
+Verify:
+
+```bash
+ros2 param get /udp_joystick_node command_timeout
+```
+
+Increase the timeout if necessary.
+
+---
+
+## Commands are ignored
+
+Verify:
+
+```bash
+ros2 topic echo /diff_drive_controller/cmd_vel
+```
+
+If commands are published but the robot does not move:
+
+```bash
+ros2 control list_controllers
+```
+
+Expected:
+
+```
+joint_state_broadcaster    active
+diff_drive_controller      active
+```
+
+---
+
+# Validation Checklist
+
+Before continuing:
+
+- Windows sender is running.
+- WSL IP is correct.
+- UDP bridge is running.
+- `/diff_drive_controller/cmd_vel` receives commands.
+- Robot moves correctly.
+- Automatic stop works after timeout.
+- No packet loss is observed.
