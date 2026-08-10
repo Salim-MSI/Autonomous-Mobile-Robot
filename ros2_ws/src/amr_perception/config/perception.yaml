@@ -1,0 +1,14 @@
+yolo_detector_node:
+  ros__parameters:
+
+    model: yolo26n.pt
+
+    image_topic: /camera/image
+
+    debug_image_topic: /perception/debug_image
+
+    confidence: 0.50
+
+    inference_rate: 5.0
+
+    device: cpu

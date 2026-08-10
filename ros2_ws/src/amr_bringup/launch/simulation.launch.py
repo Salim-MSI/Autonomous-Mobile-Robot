@@ -25,6 +25,7 @@ def generate_launch_description() -> LaunchDescription:
     use_joystick = LaunchConfiguration("use_joystick")
     use_gamepad = LaunchConfiguration("use_gamepad")
     use_udp_bridge = LaunchConfiguration("use_udp_bridge")
+    use_rviz = LaunchConfiguration("use_rviz")
 
     simulation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -37,6 +38,7 @@ def generate_launch_description() -> LaunchDescription:
         launch_arguments={
             "world": world,
             "use_sim_time": use_sim_time,
+            "use_rviz": use_rviz,
         }.items(),
     )
 
@@ -78,6 +80,10 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument(
                 "use_udp_bridge",
                 default_value="false",
+            ),
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
             ),
             simulation,
             joystick,
