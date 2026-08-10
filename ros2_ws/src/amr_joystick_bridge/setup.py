@@ -25,7 +25,6 @@ setup(
     maintainer_email="salim@example.com",
     description="Windows-to-ROS 2 UDP joystick bridge",
     license="Apache-2.0",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "udp_joystick_node = "

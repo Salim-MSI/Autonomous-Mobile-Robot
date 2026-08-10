@@ -1,10 +1,18 @@
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
+
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+)
+from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import Command, LaunchConfiguration
+
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -22,6 +30,9 @@ def generate_launch_description() -> LaunchDescription:
         get_package_share_directory("ros_gz_sim")
     )
 
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    use_rviz = LaunchConfiguration("use_rviz")
+
     xacro_file = (
         description_share
         / "urdf"
@@ -32,6 +43,12 @@ def generate_launch_description() -> LaunchDescription:
         simulation_share
         / "worlds"
         / "empty.world.sdf"
+    )
+
+    rviz_config_file = (
+        simulation_share
+        / "rviz"
+        / "simulation.rviz"
     )
 
     robot_description = ParameterValue(
@@ -65,7 +82,7 @@ def generate_launch_description() -> LaunchDescription:
         parameters=[
             {
                 "robot_description": robot_description,
-                "use_sim_time": True,
+                "use_sim_time": use_sim_time,
             }
         ],
     )
@@ -89,17 +106,15 @@ def generate_launch_description() -> LaunchDescription:
         ],
     )
 
-    bridge = Node(
+    sensor_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
         name="ros_gz_bridge",
         output="screen",
         arguments=[
-            "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
-            "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
-            "/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model",
-            "/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V",
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ],
     )
 
@@ -121,6 +136,7 @@ def generate_launch_description() -> LaunchDescription:
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        name="joint_state_broadcaster_spawner",
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
@@ -132,6 +148,7 @@ def generate_launch_description() -> LaunchDescription:
     diff_drive_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        name="diff_drive_controller_spawner",
         arguments=[
             "diff_drive_controller",
             "--controller-manager",
@@ -140,14 +157,63 @@ def generate_launch_description() -> LaunchDescription:
         output="screen",
     )
 
+    start_joint_state_broadcaster = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_robot,
+            on_exit=[
+                joint_state_broadcaster_spawner,
+            ],
+        )
+    )
+
+    start_diff_drive_controller = RegisterEventHandler(
+        OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                diff_drive_controller_spawner,
+            ],
+        )
+    )
+
+    rviz = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="screen",
+        arguments=[
+            "-d",
+            str(rviz_config_file),
+        ],
+        parameters=[
+            {
+                "use_sim_time": use_sim_time,
+            }
+        ],
+        condition=IfCondition(use_rviz),
+    )
+
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "use_sim_time",
+                default_value="true",
+            ),
+
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
+            ),
+
             gazebo,
             robot_state_publisher,
             spawn_robot,
-            bridge,
+
+            sensor_bridge,
             lidar_bridge,
-            joint_state_broadcaster_spawner,
-            diff_drive_controller_spawner,
+
+            start_joint_state_broadcaster,
+            start_diff_drive_controller,
+
+            rviz,
         ]
     )
