@@ -15,6 +15,7 @@ Unlike a standard ROS 2 joystick setup, this project uses a lightweight UDP brid
 - Windows Setup
 - WSL Setup
 - Launch the Joystick
+- Alternative Keyboard Teleoperation
 - Validation
 - Useful Commands
 - Troubleshooting
@@ -174,6 +175,17 @@ Start the bridge:
 ros2 launch amr_bringup joystick.launch.py use_udp_bridge:=True
 ```
 
+---
+
+# Alternative Keyboard Teleoperation
+
+If a physical gamepad is not available, the robot can also be controlled directly from the keyboard using the standard ROS 2 keyboard teleoperation package.
+
+Launch the keyboard teleoperation node:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard   --ros-args   -p stamped:=true   -p frame_id:=base_link   -r cmd_vel:=/diff_drive_controller/cmd_vel
+```
 ---
 
 # Validation
