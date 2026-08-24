@@ -28,9 +28,12 @@ def generate_launch_description() -> LaunchDescription:
                 description_share
                 / "launch"
                 / "display.launch.py"
-                / "use_rviz:=false"
             )
         ),
+        launch_arguments={
+            "use_rviz": "false",
+            "use_gui": "false",
+        }.items(),
     )
 
     lidar = IncludeLaunchDescription(
