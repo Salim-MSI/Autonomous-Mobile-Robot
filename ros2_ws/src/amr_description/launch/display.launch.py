@@ -18,6 +18,7 @@ def generate_launch_description() -> LaunchDescription:
     rviz_config = package_share / "rviz" / "robot.rviz"
 
     use_gui = LaunchConfiguration("use_gui")
+    use_rviz = LaunchConfiguration("use_rviz")
 
     robot_description = ParameterValue(
         Command(["xacro ", str(xacro_file)]),
@@ -59,6 +60,7 @@ def generate_launch_description() -> LaunchDescription:
         name="rviz2",
         output="screen",
         arguments=["-d", str(rviz_config)],
+        condition=IfCondition(use_rviz),
     )
 
     return LaunchDescription(
@@ -67,6 +69,11 @@ def generate_launch_description() -> LaunchDescription:
                 "use_gui",
                 default_value="true",
                 description="Launch joint_state_publisher_gui",
+            ),
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
+                description="Launch RViz2",
             ),
             robot_state_publisher,
             joint_state_publisher_gui,
