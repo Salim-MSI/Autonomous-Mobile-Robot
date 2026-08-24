@@ -44,6 +44,10 @@ def generate_launch_description() -> LaunchDescription:
                 / "rplidar_a1_launch.py"
             )
         ),
+        launch_arguments={
+            "serial_port": "/dev/ttyUSB0",
+            "frame_id": "lidar_link",
+        }.items(),
     )
 
     return LaunchDescription(
