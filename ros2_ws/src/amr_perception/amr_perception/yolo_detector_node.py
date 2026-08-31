@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-
+import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -56,17 +56,30 @@ class YoloDetectorNode(Node):
 
             annotated = results[0].plot()
 
-            output_msg = self.bridge.cv2_to_imgmsg(
+            annotated = np.ascontiguousarray(
                 annotated,
-                encoding='bgr8'
+                dtype=np.uint8
             )
 
+            output_msg = Image()
             output_msg.header = msg.header
+            output_msg.height = annotated.shape[0]
+            output_msg.width = annotated.shape[1]
+            output_msg.encoding = 'bgr8'
+            output_msg.is_bigendian = False
+            output_msg.step = annotated.shape[1] * 3
+            output_msg.data = annotated.tobytes()
 
             self.publisher.publish(output_msg)
 
         except Exception as e:
-            self.get_logger().error(str(e))
+            import traceback
+
+            self.get_logger().error(
+                f'YOLO callback error: {type(e).__name__}: {repr(e)}'
+            )
+
+            traceback.print_exc()
 
 
 def main(args=None):
