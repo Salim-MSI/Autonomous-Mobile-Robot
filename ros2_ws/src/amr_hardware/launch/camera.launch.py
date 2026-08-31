@@ -12,8 +12,8 @@ def generate_launch_description():
 
         parameters=[
             {
-                "width": 1640,
-                "height": 1232,
+                "width": 640,
+                "height": 480,
             }
         ],
 
