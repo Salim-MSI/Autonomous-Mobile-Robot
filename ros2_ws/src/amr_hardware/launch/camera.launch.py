@@ -13,6 +13,7 @@ def generate_launch_description():
             {
                 "width": 640,
                 "height": 480,
+                "FrameDurationLimits": [33333, 33333],
             }
         ],
     )
