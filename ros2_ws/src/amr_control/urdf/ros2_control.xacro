@@ -2,7 +2,9 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="ros2_control" params="name initial_positions_file:=''">
+  <xacro:macro
+      name="ros2_control"
+      params="name initial_positions_file:='' controller_params_file">
 
     <xacro:unless value="$(arg sim_mode)">
       <ros2_control name="RealRobot" type="system">
@@ -67,15 +69,17 @@
       </ros2_control>
     </xacro:if>
 
-    <gazebo>
-        <plugin
-            filename="libgz_ros2_control-system.so"
-            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <xacro:if value="$(arg sim_mode)">
+      <gazebo>
+          <plugin
+              filename="libgz_ros2_control-system.so"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
 
-            <parameters>$(find amr_control)/config/controllers.yaml</parameters>
+              <parameters>${controller_params_file}</parameters>
 
-        </plugin>
-    </gazebo>
+          </plugin>
+      </gazebo>
+    </xacro:if>
 
     <gazebo reference="left_wheel">
         <mu1>1.0</mu1>

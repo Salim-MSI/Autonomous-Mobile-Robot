@@ -7,6 +7,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     RegisterEventHandler,
+    TimerAction,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
@@ -24,6 +25,10 @@ def generate_launch_description() -> LaunchDescription:
 
     simulation_share = Path(
         get_package_share_directory("amr_simulation")
+    )
+
+    control_share = Path(
+        get_package_share_directory("amr_control")
     )
 
     ros_gz_share = Path(
@@ -51,11 +56,21 @@ def generate_launch_description() -> LaunchDescription:
         / "simulation.rviz"
     )
 
+    controller_params_file = (
+        control_share
+        / "config"
+        / "controllers_sim.yaml"
+    )
+
     robot_description = ParameterValue(
         Command(
             [
                 "xacro ",
                 str(xacro_file),
+                " use_ros2_control:=true",
+                " sim_mode:=true",
+                " controller_params_file:=",
+                str(controller_params_file),
             ]
         ),
         value_type=str,
@@ -141,6 +156,10 @@ def generate_launch_description() -> LaunchDescription:
             "joint_state_broadcaster",
             "--controller-manager",
             "/controller_manager",
+            "--controller-manager-timeout",
+            "60.0",
+            "--service-call-timeout",
+            "60.0",
         ],
         output="screen",
     )
@@ -153,6 +172,10 @@ def generate_launch_description() -> LaunchDescription:
             "diff_drive_controller",
             "--controller-manager",
             "/controller_manager",
+            "--controller-manager-timeout",
+            "60.0",
+            "--service-call-timeout",
+            "60.0",
         ],
         output="screen",
     )
@@ -161,7 +184,10 @@ def generate_launch_description() -> LaunchDescription:
         OnProcessExit(
             target_action=spawn_robot,
             on_exit=[
-                joint_state_broadcaster_spawner,
+                TimerAction(
+                    period=5.0,
+                    actions=[joint_state_broadcaster_spawner],
+                ),
             ],
         )
     )
@@ -170,7 +196,10 @@ def generate_launch_description() -> LaunchDescription:
         OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[
-                diff_drive_controller_spawner,
+                TimerAction(
+                    period=3.0,
+                    actions=[diff_drive_controller_spawner],
+                ),
             ],
         )
     )
