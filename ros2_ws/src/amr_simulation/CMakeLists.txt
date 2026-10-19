@@ -4,6 +4,13 @@ project(amr_simulation)
 find_package(ament_cmake REQUIRED)
 
 install(
+  PROGRAMS
+    scripts/camera_info_relay.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME camera_info_relay
+)
+
+install(
   DIRECTORY
     rviz
     launch

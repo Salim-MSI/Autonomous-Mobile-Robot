@@ -37,6 +37,7 @@ def generate_launch_description() -> LaunchDescription:
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_rviz = LaunchConfiguration("use_rviz")
+    world = LaunchConfiguration("world")
 
     xacro_file = (
         description_share
@@ -85,7 +86,7 @@ def generate_launch_description() -> LaunchDescription:
             )
         ),
         launch_arguments={
-            "gz_args": f"-r {world_file}"
+            "gz_args": ["-r ", world]
         }.items(),
     )
 
@@ -131,6 +132,13 @@ def generate_launch_description() -> LaunchDescription:
             "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ],
+    )
+
+    perception_camera_info_relay = Node(
+        package="amr_simulation",
+        executable="camera_info_relay",
+        name="perception_camera_info_bridge",
+        output="screen",
     )
 
     lidar_bridge = Node(
@@ -227,6 +235,11 @@ def generate_launch_description() -> LaunchDescription:
                 "use_sim_time",
                 default_value="true",
             ),
+            DeclareLaunchArgument(
+                "world",
+                default_value=str(world_file),
+                description="Gazebo world file",
+            ),
 
             DeclareLaunchArgument(
                 "use_rviz",
@@ -238,6 +251,7 @@ def generate_launch_description() -> LaunchDescription:
             spawn_robot,
 
             sensor_bridge,
+            perception_camera_info_relay,
             lidar_bridge,
 
             start_joint_state_broadcaster,
