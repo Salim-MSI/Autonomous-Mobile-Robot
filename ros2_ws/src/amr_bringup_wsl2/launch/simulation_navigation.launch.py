@@ -16,10 +16,6 @@ from launch.actions import TimerAction
 
 
 def generate_launch_description() -> LaunchDescription:
-    bringup_share = Path(
-        get_package_share_directory("amr_bringup_wsl2")
-    )
-
     localization_share = Path(
         get_package_share_directory("amr_localization")
     )
@@ -39,20 +35,6 @@ def generate_launch_description() -> LaunchDescription:
 
     navigation_params_file = LaunchConfiguration(
         "navigation_params_file"
-    )
-
-    simulation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            str(
-                bringup_share
-                / "launch"
-                / "simulation.launch.py"
-            )
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "use_joystick": "false",
-        }.items(),
     )
 
     localization = IncludeLaunchDescription(
@@ -157,7 +139,6 @@ def generate_launch_description() -> LaunchDescription:
                 "autostart",
                 default_value="true",
             ),
-            simulation,
             localization,
             delayed_navigation,
             rviz,

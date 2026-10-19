@@ -20,11 +20,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
-    bringup_share = Path(
-        get_package_share_directory("amr_bringup_wsl2")
-    )
-
     perception_share = Path(
         get_package_share_directory("amr_perception")
     )
@@ -34,20 +29,6 @@ def generate_launch_description():
 
     perception_params = LaunchConfiguration(
         "perception_params_file"
-    )
-
-    simulation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            str(
-                bringup_share
-                / "launch"
-                / "simulation.launch.py"
-            )
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "use_joystick": "false",
-        }.items(),
     )
 
     perception = IncludeLaunchDescription(
@@ -104,7 +85,6 @@ def generate_launch_description():
                 "perception_params_file",
                 default_value=str(default_params),
             ),
-            simulation,
             perception,
             rviz,
         ]
