@@ -11,7 +11,7 @@ import os
 
 def generate_launch_description() -> LaunchDescription:
 
-    joystick_config = os.path.join(get_package_share_directory("amr_bringup"),'config','joystick.yaml')
+    joystick_config = os.path.join(get_package_share_directory("amr_bringup_rasp5"),'config','joystick.yaml')
 
     use_gamepad = LaunchConfiguration("use_gamepad")
     use_udp_bridge = LaunchConfiguration("use_udp_bridge")

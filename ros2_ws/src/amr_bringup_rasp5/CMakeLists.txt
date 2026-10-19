@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(amr_bringup)
+project(amr_bringup_rasp5)
 
 find_package(ament_cmake REQUIRED)
 

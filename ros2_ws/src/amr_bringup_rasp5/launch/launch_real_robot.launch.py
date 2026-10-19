@@ -23,7 +23,7 @@ def generate_launch_description() -> LaunchDescription:
 
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory("amr_bringup"),'launch','rsp.launch.py'
+                    get_package_share_directory("amr_bringup_rasp5"),'launch','rsp.launch.py'
                 )]), launch_arguments={'use_sim_time': 'false', 'use_ros2_control': 'true'}.items()
     )
     

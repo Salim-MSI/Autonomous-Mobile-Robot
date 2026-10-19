@@ -22,7 +22,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     bringup_share = Path(
-        get_package_share_directory("amr_bringup")
+        get_package_share_directory("amr_bringup_wsl2")
     )
 
     perception_share = Path(
