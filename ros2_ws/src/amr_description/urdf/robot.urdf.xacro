@@ -3,16 +3,23 @@
 
     <xacro:arg name="use_ros2_control" default="true"/>
     <xacro:arg name="sim_mode" default="false"/>
+    <xacro:arg
+        name="controller_params_file"
+        default="$(find amr_control)/config/controllers.yaml"
+    />
+
     <xacro:include filename="robot_core.xacro"/>
     <xacro:include filename="lidar.xacro"/>
     <xacro:if value="$(arg use_ros2_control)">
         <xacro:include filename="$(find amr_control)/urdf/ros2_control.xacro"/>
-        <xacro:ros2_control name="AMRSystem"/>
+        <xacro:ros2_control
+            name="AMRSystem"
+            controller_params_file="$(arg controller_params_file)"
+        />
     </xacro:if>
     <xacro:unless value="$(arg use_ros2_control)">
         <xacro:include filename="$(find amr_simulation)/urdf/gazebo.xacro"/>
     </xacro:unless>
     <xacro:include filename="camera.xacro"/>
-    <xacro:arg name="show_camera_fov" default="false"/>
 
 </robot>
