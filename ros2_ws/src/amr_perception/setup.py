@@ -2,6 +2,32 @@ from glob import glob
 import os
 
 from setuptools import find_packages, setup
+from setuptools.command.develop import develop
+
+
+class ColconDevelopCommand(develop):
+    """Keep compatibility with colcon's editable-install cleanup option."""
+
+    user_options = develop.user_options + [
+        ("uninstall", None, "Accepted for colcon compatibility"),
+        ("editable", None, "Accepted for colcon compatibility"),
+        ("build-directory=", None, "Accepted for colcon compatibility"),
+        ("script-dir=", None, "Accepted for colcon compatibility"),
+    ]
+    boolean_options = develop.boolean_options + ["uninstall", "editable"]
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.uninstall = False
+        self.editable = False
+        self.build_directory = None
+        self.script_dir = None
+
+    def run(self):
+        # Recent setuptools removed develop's --uninstall option, while the
+        # ROS 2 colcon task still passes both options during editable builds.
+        self.editable = True
+        super().run()
 
 
 package_name = "amr_perception"
@@ -50,4 +76,5 @@ setup(
             "yolo_detector_node = amr_perception.yolo_detector_node:main",
         ],
     },
+    cmdclass={"develop": ColconDevelopCommand},
 )

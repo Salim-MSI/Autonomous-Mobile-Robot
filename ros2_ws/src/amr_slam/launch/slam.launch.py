@@ -2,12 +2,16 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 
 def generate_launch_description() -> LaunchDescription:
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    use_rviz = LaunchConfiguration("use_rviz")
 
     rviz_config = Path(
         get_package_share_directory("amr_slam")
@@ -37,7 +41,7 @@ def generate_launch_description() -> LaunchDescription:
         ),
         launch_arguments={
             "slam_params_file": str(params_file),
-            "use_sim_time": "true",
+            "use_sim_time": use_sim_time,
         }.items(),
     )
 
@@ -47,9 +51,18 @@ def generate_launch_description() -> LaunchDescription:
         name="rviz2",
         output="screen",
         arguments=["-d", str(rviz_config)],
+        condition=IfCondition(use_rviz),
     )
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            "use_sim_time",
+            default_value="true",
+        ),
+        DeclareLaunchArgument(
+            "use_rviz",
+            default_value="true",
+        ),
         slam_toolbox_launch,
         rviz,
     ])

@@ -11,11 +11,13 @@ class YoloDetectorNode(Node):
     def __init__(self):
         super().__init__('yolo_node')
 
-        self.declare_parameter('image_topic', '/camera/image_raw')
+        self.declare_parameter('image_topic', '/camera/image')
+        self.declare_parameter('debug_image_topic', '/perception/image')
         self.declare_parameter('model', 'yolov8n.pt')
         self.declare_parameter('confidence', 0.4)
 
         image_topic = self.get_parameter('image_topic').value
+        debug_image_topic = self.get_parameter('debug_image_topic').value
         model_name = self.get_parameter('model').value
         self.confidence = self.get_parameter('confidence').value
 
@@ -33,7 +35,7 @@ class YoloDetectorNode(Node):
 
         self.publisher = self.create_publisher(
             Image,
-            '/perception/image_annotated',
+            debug_image_topic,
             10
         )
 
