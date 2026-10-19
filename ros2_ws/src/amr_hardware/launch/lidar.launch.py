@@ -8,10 +8,6 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description() -> LaunchDescription:
-    bringup_share = Path(
-        get_package_share_directory("amr_bringup")
-    )
-
     description_share = Path(
         get_package_share_directory("amr_description")
     )
