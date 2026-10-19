@@ -8,28 +8,8 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description() -> LaunchDescription:
-    description_share = Path(
-        get_package_share_directory("amr_description")
-    )
-
     rplidar_share = Path(
         get_package_share_directory("rplidar_ros")
-    )
-
-    use_lidar = LaunchConfiguration("use_lidar")
-
-    description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            str(
-                description_share
-                / "launch"
-                / "display.launch.py"
-            )
-        ),
-        launch_arguments={
-            "use_rviz": "false",
-            "use_gui": "false",
-        }.items(),
     )
 
     lidar = IncludeLaunchDescription(
@@ -48,11 +28,6 @@ def generate_launch_description() -> LaunchDescription:
 
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                "use_lidar",
-                default_value="true",
-            ),
-            description,
             lidar,
         ]
     )
