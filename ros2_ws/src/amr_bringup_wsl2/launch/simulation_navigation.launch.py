@@ -7,43 +7,34 @@ from launch.actions import (
     IncludeLaunchDescription,
 )
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+)
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch.actions import TimerAction
 
 
 def generate_launch_description() -> LaunchDescription:
-    bringup_share = Path(
-        get_package_share_directory("amr_bringup")
-    )
-
     localization_share = Path(
         get_package_share_directory("amr_localization")
     )
 
+    navigation_share = Path(
+        get_package_share_directory("amr_navigation")
+    )
+
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_rviz = LaunchConfiguration("use_rviz")
-    use_joystick = LaunchConfiguration("use_joystick")
-    use_gamepad = LaunchConfiguration("use_gamepad")
-    use_udp_bridge = LaunchConfiguration("use_udp_bridge")
     map_file = LaunchConfiguration("map")
-    params_file = LaunchConfiguration("params_file")
     autostart = LaunchConfiguration("autostart")
 
-    simulation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            str(
-                bringup_share
-                / "launch"
-                / "simulation.launch.py"
-            )
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "use_joystick": use_joystick,
-            "use_gamepad": use_gamepad,
-            "use_udp_bridge": use_udp_bridge,
-        }.items(),
+    localization_params_file = LaunchConfiguration(
+        "localization_params_file"
+    )
+
+    navigation_params_file = LaunchConfiguration(
+        "navigation_params_file"
     )
 
     localization = IncludeLaunchDescription(
@@ -57,9 +48,28 @@ def generate_launch_description() -> LaunchDescription:
         launch_arguments={
             "use_sim_time": use_sim_time,
             "map": map_file,
-            "params_file": params_file,
+            "params_file": localization_params_file,
             "autostart": autostart,
         }.items(),
+    )
+
+    navigation = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            str(
+                navigation_share
+                / "launch"
+                / "navigation.launch.py"
+            )
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "params_file": navigation_params_file,
+        }.items(),
+    )
+
+    delayed_navigation = TimerAction(
+        period=5.0,
+        actions=[navigation],
     )
 
     rviz = Node(
@@ -70,9 +80,9 @@ def generate_launch_description() -> LaunchDescription:
         arguments=[
             "-d",
             str(
-                localization_share
+                navigation_share
                 / "rviz"
-                / "localization.rviz"
+                / "navigation.rviz"
             ),
         ],
         parameters=[
@@ -87,10 +97,16 @@ def generate_launch_description() -> LaunchDescription:
         / "test_world.yaml"
     )
 
-    default_params_file = (
+    default_localization_params = (
         localization_share
         / "config"
         / "localization_params.yaml"
+    )
+
+    default_navigation_params = (
+        navigation_share
+        / "config"
+        / "nav2_params.yaml"
     )
 
     return LaunchDescription(
@@ -104,32 +120,27 @@ def generate_launch_description() -> LaunchDescription:
                 default_value="true",
             ),
             DeclareLaunchArgument(
-                "use_joystick",
-                default_value="true",
-            ),
-            DeclareLaunchArgument(
-                "use_gamepad",
-                default_value="false",
-            ),
-            DeclareLaunchArgument(
-                "use_udp_bridge",
-                default_value="false",
-            ),
-            DeclareLaunchArgument(
                 "map",
                 default_value=str(default_map),
-                description="Map YAML file",
             ),
             DeclareLaunchArgument(
-                "params_file",
-                default_value=str(default_params_file),
+                "localization_params_file",
+                default_value=str(
+                    default_localization_params
+                ),
+            ),
+            DeclareLaunchArgument(
+                "navigation_params_file",
+                default_value=str(
+                    default_navigation_params
+                ),
             ),
             DeclareLaunchArgument(
                 "autostart",
                 default_value="true",
             ),
-            simulation,
             localization,
+            delayed_navigation,
             rviz,
         ]
     )

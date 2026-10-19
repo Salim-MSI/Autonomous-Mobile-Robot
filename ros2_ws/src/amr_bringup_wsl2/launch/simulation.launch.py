@@ -17,7 +17,7 @@ def generate_launch_description() -> LaunchDescription:
     )
 
     bringup_share = Path(
-        get_package_share_directory("amr_bringup")
+        get_package_share_directory("amr_bringup_rasp5")
     )
 
     world = LaunchConfiguration("world")
