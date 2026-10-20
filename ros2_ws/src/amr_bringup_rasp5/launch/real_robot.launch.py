@@ -39,6 +39,12 @@ def generate_launch_description() -> LaunchDescription:
         / "localization_params.yaml"
     )
 
+    navigation_params = (
+        Path(get_package_share_directory("amr_navigation"))
+        / "config"
+        / "nav2_params.yaml"
+    )
+
     base = IncludeLaunchDescription(
         package_launch("amr_bringup_rasp5", "launch_real_robot.launch.py"),
         condition=IfCondition(use_base),
@@ -83,6 +89,7 @@ def generate_launch_description() -> LaunchDescription:
         launch_arguments={
             "use_sim_time": "false",
             "autostart": "true",
+            "params_file": str(navigation_params),
         }.items(),
         condition=IfCondition(use_navigation),
     )
