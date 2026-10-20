@@ -124,7 +124,7 @@ def generate_launch_description() -> LaunchDescription:
                 default_value=str(
                     Path(get_package_share_directory("amr_localization"))
                     / "maps"
-                    / "test_world.yaml"
+                    / "salon.yaml"
                 ),
             ),
             DeclareLaunchArgument(

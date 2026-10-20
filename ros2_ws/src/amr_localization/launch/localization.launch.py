@@ -16,7 +16,7 @@ def generate_launch_description() -> LaunchDescription:
     default_map = (
         localization_share
         / "maps"
-        / "test_world.yaml"
+        / "salon.yaml"
     )
 
     default_params_file = (
